@@ -2,7 +2,7 @@ from .utils import debug, nopfn
 import sys
 import inspect
 import zipfile
-import os
+from os.path import exists
 import fnmatch
 from math import log
 
@@ -10,8 +10,6 @@ from math import log
 from PIL import Image
 from PIL.ImageFile import Parser
 from PIL.ImageEnhance import Contrast
-from PIL.ImageFilter import BLUR
-from optparse import OptionParser
 from PIL.ImageOps import autocontrast
 
 
@@ -31,7 +29,7 @@ contrast = 0.8
 barrier = 210
 
 
-class Page(object):
+class Page():
     """A page of the book"""
 
     # Typical Layout of a page:
@@ -68,6 +66,59 @@ class Page(object):
     # To make the detection of boundaries easier, we first increase the contrast and remove any
     # gradients. This, unfortunately involves making 2 copies of the image (PIL, unfortunately,
     # (for most part) does not support in-place operations) :(.
+    
+    def __init__(self, infile:str, startRow=0, lignore=0, rignore=0, contents=True, pgNum=1, quiet=False, debug=False, fwidth:int=50, fheight=50):
+        """A page object.
+        Valid keyword parameters:
+        infile:
+            A String holding page contents or the page file name (depending on the contents
+            parameter)
+        startRow (default:0):
+            Which row to start analyzing from. This is typically used for analyzing the first
+            page of a comic where some top part of the page contains the title (which we need
+            to skip)
+        lignore, rignore (default:0 for both):
+            Scanned pages might have some non-white color on one or both of the edges which
+            interfere with gutter detection. These paramters tell the gutter detection
+            algorithm to adjust the left boundary by lignore and right boundary by
+            rignore when locating gutters
+        contents (default: True):
+            True => "infile" is a string consisting of page contents
+            False => "infile" is a string holding the name of the page file to open
+        pgNum (default:1):
+            Page number (used when processing a whole book)
+        quiet:
+            Don't print any status messages
+        debug:
+            Enable debug prints
+        fwidth, fheight:
+            Minimum width (height resp) of a frame"""
+    
+        self.infile = infile
+
+        self.startRow = startRow
+
+        self.lignore = lignore
+        self.rignore = rignore
+
+        self.contents = False if exists(self.infile) else True
+        self.pgNum = pgNum
+        self.quiet = quiet
+        self.debug = debug
+        
+        self.fwidth = fwidth
+        self.fheight = fheight
+        
+        quietFns = {False:(self._prnfn, self._nlfn), True:(nopfn, nopfn)}
+        self.prnfn, self.nlfn = quietFns[self.quiet]
+        if self.contents:
+            parser = Parser()
+            parser.feed(self.infile)
+            self.orig = parser.close()
+        else:
+            self.orig = Image.open(self.infile)
+        self.img = self._prepare()
+        self.frames = self._getFrames()
 
     def _isGutterRow(self, left, row, right):
         """Is the row from [left, right) a gutter?"""
@@ -229,48 +280,6 @@ class Page(object):
     def _prepare(self):
         bwimg = self.orig.convert("L")
         return Contrast(autocontrast(bwimg, 10)).enhance(contrast).point(self._digitize)
-
-    keys = ["startRow", "lignore", "rignore", "contents", "infile", "pgNum", "quiet",
-            "debug", "fwidth", "fheight"]
-
-    def __init__(self, **kw):
-        """A page object.
-        Valid keyword parameters:
-        startRow (default:0):
-            Which row to start analyzing from. This is typically used for analyzing the first
-            page of a comic where some top part of the page contains the title (which we need
-            to skip)
-        lignore, rignore (default:0 for both):
-            Scanned pages might have some non-white color on one or both of the edges which
-            interfere with gutter detection. These paramters tell the gutter detection
-            algorithm to adjust the left boundary by lignore and right boundary by
-            rignore when locating gutters
-        contents (default: True):
-            True => "infile" is a string consisting of page contents
-            False => "infile" is a string holding the name of the page file to open
-        infile:
-            A String holding page contents or the page file name (depending on the contents
-            parameter)
-        pgNum (default:1):
-            Page number (used when processing a whole book)
-        quiet:
-            Don't print any status messages
-        debug:
-            Enable debug prints
-        fwidth, fheight:
-            Minimum width (height resp) of a frame"""
-        object.__init__(self)
-        [self.__setattr__(k, kw[k]) for k in Page.keys]
-        quietFns = {False:(self._prnfn, self._nlfn), True:(nopfn, nopfn)}
-        self.prnfn, self.nlfn = quietFns[self.quiet]
-        if self.contents:
-            parser = Parser()
-            parser.feed(kw["infile"])
-            self.orig = parser.close()
-        else:
-            self.orig = Image.open(self.infile)
-        self.img = self._prepare()
-        self.frames = self._getFrames()
 
     def save(self, prefix="", counter=0):
         debug(self.debug, "Saving pages:")
