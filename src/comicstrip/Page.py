@@ -1,21 +1,12 @@
-cd #!/usr/bin/env/python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Feb 20 09:14:25 2018
-
-@author: Soham Sil
-"""
-
-# Comicstrip - extract individual frames from a comic book/strip
-
+from .utils import debug, nopfn
 import sys
 import inspect
 import zipfile
 import os
-import Pillow
 import fnmatch
-
 from math import log
+
+
 from PIL import Image
 from PIL.ImageFile import Parser
 from PIL.ImageEnhance import Contrast
@@ -23,8 +14,6 @@ from PIL.ImageFilter import BLUR
 from optparse import OptionParser
 from PIL.ImageOps import autocontrast
 
-
-_version = "0.1"
 
 # gutter color
 gcolor = 255
@@ -41,21 +30,8 @@ contrast = 0.8
 # numbers here come from trial and error!
 barrier = 210
 
-def debug(switch, *args):
-    if switch:
-        callerframe = inspect.getouterframes(inspect.currentframe())[1]
-        line, caller = callerframe[2], callerframe[3]
-        context = "%s:%d" % (caller, line)
-        print("%-20s:" % (context), " ".join(map(str, args)))
-        
-        
-        
-def nopfn(*args):
-    pass
 
-
-
-class page(object):
+class Page(object):
     """A page of the book"""
 
     # Typical Layout of a page:
@@ -284,7 +260,7 @@ class page(object):
         fwidth, fheight:
             Minimum width (height resp) of a frame"""
         object.__init__(self)
-        [self.__setattr__(k, kw[k]) for k in page.keys]
+        [self.__setattr__(k, kw[k]) for k in Page.keys]
         quietFns = {False:(self._prnfn, self._nlfn), True:(nopfn, nopfn)}
         self.prnfn, self.nlfn = quietFns[self.quiet]
         if self.contents:
@@ -306,99 +282,6 @@ class page(object):
             counter += 1
         return counter
     
-    
-    
-    
-    
-class comic(object):
-    """A comic book - a cbz or a cbr file"""
-
-    PROCESS_BOOK = 0
-    PROCESS_PAGE = 1
-
-    keys = ["infile", "prefix", "firstPg", "firstPgRow", "startRow", "lignore", "rignore",
-            "filePat", "fileList", "quiet", "gwidth", "debug", "fwidth", "fheight"]
-    pgkeys = ["startRow", "lignore", "rignore", "infile", "quiet", "debug", "fwidth", "fheight"]
-
-    def __init__(self, **kw):
-        """Initialize a comic book (cbz) file.
-        Permitted arguments
-        infile:
-            Name of the comic book to process. Only cbz files are supported at the moment.
-        prefix:
-            Output file prefix. Each output fill will be of the form prefixNNN
-        firstPg:
-            The name of the first page to start analyzing from.
-        firstPgRow:
-            The first page might start with a title first. We need to skip over this to
-            get to the actual rows
-        lignore, rignore:
-            Sometimes scanned pages are not at the edges. lignore, rignore tell us
-            how many left/right columns to ignore when searching for rows
-        filePat:
-            File names in the archive that match this pattern will be processed. The pattern is
-            a glob expression. If both fileList and filePat are specified, fileList is used, if
-            neither are specified then the file pattern "*.jpg" is used.
-        fileList:
-            File names in the archive that are in this list will be processed. If both fileList
-            and filePat are specified, fileList is used, if neither are specified then the file
-            pattern "*.jpg" is used.
-        gwidth:
-            Minimum width (and height) of the gutter.
-        fwidth, fheight:
-            Minimum width (height resp) of a frame.
-        quiet:
-            Don't print any progress messages.
-        debug:
-            Enable debug prints"""
-        object.__init__(self)
-        [self.__setattr__(k, kw[k]) for k in comic.keys]
-        self.counter = 0 # used when writing output
-        try:
-            self.zfile = zipfile.ZipFile(kw["infile"])
-        except:
-            # is probably a single page image instead of a comic book
-            self.actionType = comic.PROCESS_PAGE
-        else:
-            self.actionType = comic.PROCESS_BOOK
-
-    def processBook(self):
-        if len(self.fileList) == 0:
-            self.fileList = fnmatch.filter(self.zfile.namelist(), self.filePat)
-            self.fileList.remove(self.firstPg)
-        kw = dict([(k, object.__getattribute__(self, k)) for k in comic.pgkeys])
-        kw["pgNum"] = 1
-        kw["contents"] = True
-        if self.firstPg:
-            # process the start page separately
-            buf = self.zfile.read(self.firstPg)
-            kw["startRow"] = self.firstPgRow
-            kw["infile"] = buf
-            pg = page(**kw)
-            self.counter = pg.save(self.prefix, self.counter)
-            kw["pgNum"] += 1
-
-        # for other pages, startRow = startRow
-        kw["startRow"] = self.startRow
-        for fname in self.fileList:
-            buf = self.zfile.read(fname)
-            kw["infile"] = buf
-            pg = page(**kw)
-            self.counter = pg.save(self.prefix, self.counter)
-            kw["pgNum"] += 1
-
-    def processPg(self):
-        kw = dict([(k, object.__getattribute__(self, k)) for k in comic.pgkeys])
-        kw["pgNum"] = 1
-        kw["contents"] = False
-        page(**kw).save(self.prefix, self.counter)
-
-    def process(self):
-        if self.actionType == comic.PROCESS_BOOK:
-            self.processBook()
-        else:
-            self.processPg()
-        print
 
 def pgtest():
     global DEBUG
@@ -411,79 +294,5 @@ def pgtest():
     counter = 11
     for pgname in pgs:
         print("Processing page:", pgname)
-        pg = page(pgname, startrow, 50, 50)
+        pg = Page(pgname, startrow, 50, 50)
         counter = pg.save("ottokar-", counter)
-
-
-def getargs(parser):
-    (options, args) = parser.parse_args()
-    kw = {}
-    kw["infile"] = options.infile
-    if kw["infile"] is None:
-     raise ValueError("Input File Not Specified")
-    kw["prefix"] = options.prefix
-    kw["firstPg"] = options.firstPg
-    kw["firstPgRow"] = options.firstPgRow
-    kw["startRow"] = options.startRow
-    kw["lignore"] = options.lignore
-    kw["rignore"] = options.rignore
-    kw["filePat"] = options.filePat
-    kw["quiet"] = options.quiet
-    kw["gwidth"] = options.gwidth
-    kw["fwidth"] = options.fwidth
-    kw["fheight"] = options.fheight
-    kw["debug"] = options.debug
-    kw["fileList"] = args
-    return kw
-
-
-parser = OptionParser(usage="%prog [options] [pgfile1, pgfile2, ...]",
-                      version="%%prog %s" % (_version),
-                      description="Split a comic page into individual frames")
-parser.add_option("-q", "--quiet", action="store_true", dest="quiet",
-                  help="Don't print progress messages to stdout [default:%default]")
-parser.add_option("-d", "--debug", dest="debug", action="store_true",
-                  help="Enable debug prints [default:%default]")
-parser.add_option("-f", "--file", dest="infile", type="string", metavar="FILE",
-                  help="Name of the input file")
-
-parser.add_option("", "--prefix", dest="prefix",
-                  help="Prefix for output files")
-parser.add_option("", "--left-ignore", type="int", dest="lignore", metavar="PIXELS",
-                  help="How much of the left margin to ignore when detecting rows [default:%default]")
-parser.add_option("", "--right-ignore", type="int", dest="rignore", metavar="PIXELS",
-                  help="How much of the right margin to ignore when detecting rows [default:%default]")
-parser.add_option("", "--firstpage", dest="firstPg", type="string", metavar="PGFILENAME",
-                  help="Name of the title page in comic archive file")
-parser.add_option("", "--firstpg-row", type="int", dest="firstPgRow", metavar="PIXELS",
-                  help="From which line of the first page should the processing start [default:%default]")
-parser.add_option("", "--startrow", type="int", dest="startRow", metavar="PIXELS",
-                  help="From which line of the each page (other than the first page) should the processing start [default:%default]")
-parser.add_option("", "--glob", dest="filePat", metavar="GLOB",
-                  help="A glob expression to select files to be processed from the book. (Not required if a file list is provided.)")
-parser.add_option("", "--gutter-width", dest="gwidth", metavar="WIDTH",
-                  help="Minimum width of the gutter [default:%default]")
-parser.add_option("", "--min-width", dest="fwidth", metavar="WIDTH", type="int",
-                  help="Minimum width of a frame [default:%default]")
-parser.add_option("", "--min-height", dest="fheight", metavar="HEIGHT", type="int",
-                  help="Minimum height of a frame [default:%default]")
-
-parser.set_defaults(quiet=False,
-                    prefix="cstrip-",
-                    lignore=0,
-                    rignore=0,
-                    firstPgRow=0,
-                    startRow=0,
-                    gwidth=15,
-                    fwidth=50,
-                    fheight=50,
-                    debug=True)
-
-kw = getargs(parser)
-book = comic(**kw)
-book.process()
-
-
-
-
-        
