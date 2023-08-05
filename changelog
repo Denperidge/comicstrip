@@ -8,3 +8,6 @@ Changelog:
 
 2018/02/22 	Soham Sil  <sil(dot)soham(at)gmail(dot)com>
 	* Created Python3 compatible version
+
+2023/08/05 	Denperidge  <denperidge(at)gmail(dot)com>
+	* Restructured into library

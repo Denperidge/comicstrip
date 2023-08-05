@@ -1,0 +1,29 @@
+[project]
+name = "comicstrip"
+version = "0.0.1"
+authors = [
+    { name="David Koo", email="koofoss@gmx.com" },
+    { name="Robin Monks", email="devlinks@gmail.com" },
+    { name="Soham Sil", email="sil.soham@gmail.com" },
+    { name="Denperidge", email="denperidge@gmail.com" },
+]
+maintainers = [
+    { name="Denperidge", email="denperidge@gmail.com" },
+]
+description = "A fork of comicstrip - Extract individual frames of a comic book"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "Pillow"
+]
+classifiers = [
+
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Denperidge/comicstrip"
+"Bug Tracker" = "https://github.com/Denperidge/comicstrip/issues"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

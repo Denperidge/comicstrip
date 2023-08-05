@@ -5,7 +5,7 @@
 What is it?
 -----------
 
-    While it is easy to read comic books on a regular PC, it is much more
+While it is easy to read comic books on a regular PC, it is much more
 inconvenient to do so on a PDA because of its small screen size - one typically
 ends up scrolling around the whole page to read it. This application breaks down
 each page of a comic book into individual frames (i.e. each frame becomes an
@@ -13,29 +13,28 @@ individual page) which can then be conveniently viewed on small-screen devices
 like PDAs. It can process a single image file or a whole comic book file (only
 cbz files are supported currently)
 
-
-Requirements
-------------
-    Python (tested only with 2.5)
-    Python Imaging Library
-    Linux (I suppose it should work on "M$ Windoze" but I haven't tested it)
-
-
 Installation
 ------------
-    Copy the comicstrip file to a directory in your PATH.
+```bash
+git clone https://github.com/Denperidge/comicstrip.git
+cd comicstrip
+python3 -m pip install -r requirements.txt
+python3 -m src.comicstrip
+```
+
+To run tests, simply use `python3 -m unittest`
 
 
 Basic Terminology Used
 ----------------------
 
-    A typical page of a comic book consists of a number of frames separated by
+A typical page of a comic book consists of a number of frames separated by
 horizontal/vertical white spaces called gutters. The title page might contain an
 additional heading in the beginning. The height of each frame in a page (indeed
 in all pages of a book) are more-or-less the same. The frame widths, however,
 usually differ.
 
-    A comic book is usually a compressed archive of images with different
+A comic book is usually a compressed archive of images with different
 extensions to indicate the type of compression. Common formats include .cbz
 (which is simply a zip archive of images) and .cbr (which is an RAR archive of
 images). As mentioned above, comicstrip supports only .cbz files currently.
@@ -46,9 +45,9 @@ Usage
 
 Basic Invocation:
 
-    comicstrip.py [options] [pgfile1, pgfile2, ...]
+python3 -m src.comicstrip [options] [pgfile1, pgfile2, ...]
 
-    The comicstrip application is, at the moment, a command line application.
+The comicstrip application is, at the moment, a command line application.
 All parameters are passed in via command line parameters. A GUI front-end is
 planned down the line to make the application easier to use.
 
@@ -79,9 +78,9 @@ Valid Options are:
 --prefix=PREFIX
     Prefix for output files. Mandatory parameter
     The individual frames are saved to files with names of the form:
-        <prefix>00.jpg,
-        <prefix>01.jpg
-        <prefix>02.jpg
+        `<prefix>00.jpg,`
+        `<prefix>01.jpg`
+        `<prefix>02.jpg`
         ...
     The number of leading zeroes is automatically adjusted depending on the
     number of output frames. If you want to save the output files into a
@@ -155,17 +154,17 @@ Of course, for single page image files, this list is empty.
 
 Limitations
 -----------
-    The application might not be able to successfully extract frames from a
+The application might not be able to successfully extract frames from a
 (slightly) rotated page (i.e. the page is not entirely horizontal).
 
-    In some pages, some images "overflow" into the gutter space (e.g. some
+In some pages, some images "overflow" into the gutter space (e.g. some
 speech bubbles overflow into the vertical gutter). In such cases the application
 will not be able to successfully separate the two frames. If it is the vertical
 gutter that is "occupied" then the two adjacent frames will be extracted as one.
 If, however, the horizontal gutter is "occupied" then the two rows will be
 treated as one!
 
-    If the gutters in a page are not "clean" (i.e. they contain some "random",
+If the gutters in a page are not "clean" (i.e. they contain some "random",
 dark pixels - typical in some scanned images of old comics) then they too might
 negatively impact the gutter processing algorithm. For images where the gutter
 is "clean" (all "light" colors) there shouldn't be any problems.
@@ -173,12 +172,10 @@ is "clean" (all "light" colors) there shouldn't be any problems.
 
 Contact
 -------
-    You can reach me at: koofoss(at)g-m-x(dot)com
-    (remove the '-'s between the characters above).
+You can reach me at: koofoss(at)g-m-x(dot)com
+(remove the '-'s between the characters above).
 
 
 Happy Reading!
 Koo.
 
---
-vim:tw=80 noai
