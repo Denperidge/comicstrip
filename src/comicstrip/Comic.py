@@ -1,5 +1,6 @@
 from .Page import Page
 import zipfile
+import fnmatch
 
 
 class Comic(object):

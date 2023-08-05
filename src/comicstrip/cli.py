@@ -25,7 +25,7 @@ def getargs(parser):
     return kw
 
 
-parser = ArgumentParser(usage="%prog [options] [pgfile1, pgfile2, ...]",
+parser = ArgumentParser(usage="%(prog)s [options] [pgfile1, pgfile2, ...]",
                         prog="comicstrip",
                         description="Split a comic page into individual frames")
 
@@ -45,7 +45,7 @@ parser.add_argument("-d", "--debug",
 
 parser.add_argument("-f", "--file", 
                     dest="infile",
-                    type=FileType("r"),
+                    type=FileType("rb"),
                     metavar="FILE",
                     help="Name of the input file",
                     required=True)
@@ -106,6 +106,11 @@ parser.add_argument("--min-height",
                     type=int,
                     help="Minimum height of a frame [default:%default]")
 
+parser.add_argument("fileList",
+                    nargs="*",
+                    type=FileType("rb"),
+                    help="")
+
 parser.set_defaults(quiet=False,
                     prefix="cstrip-",
                     lignore=0,
@@ -119,6 +124,6 @@ parser.set_defaults(quiet=False,
 
 
 def run_cli():
-    kw = getargs(parser)
+    kw = vars(parser.parse_args())
     book = Comic(**kw)
     book.process()
