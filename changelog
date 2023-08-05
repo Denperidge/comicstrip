@@ -2,3 +2,9 @@ Changelog:
 
 2009/10/10  David Koo  <koofoss(at)g-m-x(dot)com>
 	* Initial working copy. Works only with cbz files (no cbr support).
+
+2011/09/11  Robin Monks  <devlinks(at)gmail(dot)com>
+	* Clone from launchpad to GitHub
+
+2018/02/22 	Soham Sil  <sil(dot)soham(at)gmail(dot)com>
+	* Created Python3 compatible version
